@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Prototyping #HFCB : Face++</title>
+      <style>
+      body { margin:0; padding:0; font-size:small; }
+      #map { position:fixed; top:0; bottom:0; right:0; float:0; width:40%; height: 70%; border:2px solid #73AD21; opacity: 0.7;}
+      #map:hover { opacity: 1.0;}
+      #thumb { position:static; top:0; bottom:0; right:0; width:500px; height:500px; border:1px solid #73AD21; display:none;}
+      .category { width:400px; border:1px solid #73ADff;}
+      .container { position:static; top:0; bottom:0; width:100%; }
+      .list { position:static; top:0; bottom:0; width:100%; font-size:small; }
+      .json { width: 200px; height:200px; margin:10px; display:inline-block; font-size:small; }
+    </style>
+  </head>
+  <body>
+	<h2>Prototyping of #HFCB - Face Selection</h2>
+    <div id='input_area'>
+        Face 1 : <input type="text" name="url" class="category" value="http://thumbnail.egloos.net/600x0/http://pds27.egloos.com/pds/201507/01/47/b0041247_55939d2614880.jpg"/>
+        <br>Face 2 : <input type="text" name="url" class="category" value="http://thumbnail.egloos.net/600x0/http://pds25.egloos.com/pds/201507/01/47/b0041247_55939d257ef9c.jpg"/>
+        <br>Face 3 : <input type="text" name="url" class="category" value="http://thumbnail.egloos.net/600x0/http://pds27.egloos.com/pds/201507/01/47/b0041247_55939d2471892.jpg"/>
+        <br>Face 4 : <input type="text" name="url" class="category" value="http://thumbnail.egloos.net/600x0/http://pds26.egloos.com/pds/201507/01/47/b0041247_55939d31e6272.jpg"/>
+        <br>Face 5 : <input type="text" name="url" class="category" value="http://thumbnail.egloos.net/600x0/http://pds25.egloos.com/pds/201507/01/47/b0041247_55939d2fe07d3.jpg"/>
+        <!--         Img1 : <input type="text" name="url" class="category" value="http://thumbnail.egloos.net/600x0/http://pds26.egloos.com/pds/201506/25/47/b0041247_558c15ff2fe83.jpg"/>
+        <br>Img2 : <input type="text" name="url" class="category" value="http://thumbnail.egloos.net/600x0/http://pds21.egloos.com/pds/201507/01/47/b0041247_55939d2219de3.jpg"/>
+        <br>Img3 : <input type="text" name="url" class="category" value="http://thumbnail.egloos.net/600x0/http://pds21.egloos.com/pds/201507/01/47/b0041247_55939d2357e65.jpg"/> -->
+      </div>
+	<button class='gen_btn' id='addmore' onclick='addmore();'>Adding input box</button>
+	<button class='gen_btn' id='pick' onclick='selection();'>Re-Pick!</button>
+	<button class='gen_btn' id='init' onclick='init();'>Clear</button>
+      <br>
+	<h4>[Thumbnail Area]</h4>
+      <div id="container" class="thumb" style="background-color: black; padding:10px;"></div>
+	<h4>[Response values]</h4>
+      <div id="result"></div>
+      <br>
+	<h4>[Picked]</h4>
+      <img id="selected" src="" alt="HandsomeFace" width='200px'>
+    <!-- <pre id="response">Loading...</pre> -->
+    <textarea id='response' class='text json'>Loading...</textarea>
+      
+    <script type="text/javascript" src="facepp-sdk.min.js"></script>
+    <script type="text/javascript">
+        var container = document.getElementById('container');
+        function init(){
+            container.innerHTML = "";
+            document.getElementById('result').innerHTML = "";
+        }
+        function addmore(){
+        	var str = '<br>NewFace : <input type="text" name="url" class="category" value=""/>';
+            document.getElementById('input_area').innerHTML += str;
+        }
+        
+        function selection(){
+            var urls = document.getElementsByName('url');
+            var res = document.getElementById('result');
+            var len = urls.length;
+            
+            var max = 0;
+            var maxImg = "";
+            for(var i=0; i<len; i++) {
+                var obj = urls[i];
+                //obj.style.backgroundColor = colorName;
+                container.innerHTML += "<img src='"+obj.value+"' width='100px'>";
+            
+                var api = new FacePP('0ef14fa726ce34d820c5a44e57fef470', '4Y9YXOMSDvqu1Ompn9NSpNwWQFHs1hYD');
+                api.request('detection/detect', {
+                  url: obj.value //'http://cn.faceplusplus.com/static/resources/python_demo/1.jpg'
+                }, function(err, result) {
+                  if (err) {
+                    // TODO handle error
+                      console.log('error');
+                    return;
+                  }
+                  // TODO use result
+                    var attr = result.face[0].attribute;
+                    var age = attr.age.value;
+                    var emotion = attr.smiling.value;
+                    
+                    var score = (100-age) - (emotion>50 ? emotion-50 : 50-emotion); 
+                    
+                    if(score > max) {
+                        max = score;
+                        maxImg = obj.value;
+                        document.getElementById('selected').src = maxImg;
+                    }
+                    res.innerHTML += "["+score+"] Age: "+age +", Smile: "+ emotion+"<br>";
+                });
+            }
+            //res.innerHTML += max + " = <img src='"+maxImg+"' width='100px'>";
+
+        }
+        
+        
+      (function() {
+        var api = new FacePP('0ef14fa726ce34d820c5a44e57fef470', '4Y9YXOMSDvqu1Ompn9NSpNwWQFHs1hYD');
+        api.request('detection/detect', {
+          url: 'http://pds27.egloos.com/pds/201507/01/47/b0041247_55939d2471892.jpg' //'http://cn.faceplusplus.com/static/resources/python_demo/1.jpg'
+        }, function(err, result) {
+          if (err) {
+            // TODO handle error
+              console.log('error');
+            return;
+          }
+          // TODO use result
+          document.getElementById('response').innerHTML = JSON.stringify(result, null, 2);
+        });
+      })();
+        selection();
+    </script>
+  </body>
+</html>
